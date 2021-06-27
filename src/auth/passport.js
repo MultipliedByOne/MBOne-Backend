@@ -1,24 +1,34 @@
 import passport from 'passport'
-import {Strategy as PassportJWTStrategy} from 'passport-jwt';
 import { Strategy as StrategyGoogle } from 'passport-google-oauth20'
-import { async } from 'regenerator-runtime'
-import { getOneOrCreateByGoogleDetails, getUserById } from '../services/user.service'
+import { getOneOrCreateByGoogleDetails } from '../services/user.service'
+import config from '../libs/config'
 
 export function getConfiguredPassport(){
+    /*
+    passport.serializeUser((user, next) => {
+        next(null, user)
+    })
+
+    passport.deserializeUser((user, next) => {
+        next(null, user)
+    })
+    */
+
     //Setup google oauth
     passport.use(new StrategyGoogle({
-            clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-            callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL
+            clientID: config.get('GOOGLE_OAUTH_CLIENT_ID'),
+            clientSecret: config.get('GOOGLE_OAUTH_CLIENT_SECRET'),
+            callbackURL: config.get('GOOGLE_OAUTH_CALLBACK_URL')
         },
         async (accessToken, refreshToken, profile, cb) => {
             return cb(null, await getOneOrCreateByGoogleDetails(profile.id, profile.emails[0].value))
         }
     ))
 
+/*
     //Setup google authentication
     passport.use(new PassportJWTStrategy({
-        jwtFromRequest: req => req.cookies.jwt,
+        jwtFromRequest: req => req.cookies.accessToken,
         secretOrKey: process.env.JWT_SECRET,
     }, async (jwt_payload, done) => {
         // Load user by id if we have one!
@@ -29,6 +39,7 @@ export function getConfiguredPassport(){
             return done(e, false)
         }
     }))
+ */   
 
     return passport
 }
